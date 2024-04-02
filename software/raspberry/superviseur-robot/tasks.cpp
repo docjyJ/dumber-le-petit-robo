@@ -275,6 +275,10 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_move, TM_INFINITE);
             move = msgRcv->GetID();
             rt_mutex_release(&mutex_move);
+        } else if (msgRcv->CompareID(MESSAGE_ROBOT_BATTERY_GET)) {
+            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+            WriteInQueue(&q_messageToMon, robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET)));
+            rt_mutex_release(&mutex_robot);
         }
         delete(msgRcv); // mus be deleted manually, no consumer
     }
