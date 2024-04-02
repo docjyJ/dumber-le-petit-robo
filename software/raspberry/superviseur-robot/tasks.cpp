@@ -275,10 +275,6 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_move, TM_INFINITE);
             move = msgRcv->GetID();
             rt_mutex_release(&mutex_move);
-        } else if (msgRcv->CompareID(MESSAGE_ROBOT_BATTERY_GET)) {
-            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
-            WriteInQueue(&q_messageToMon, robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET)));
-            rt_mutex_release(&mutex_robot);
         }
         delete(msgRcv); // mus be deleted manually, no consumer
     }
@@ -382,6 +378,35 @@ void Tasks::MoveTask(void *arg) {
             rt_mutex_acquire(&mutex_robot, TM_INFINITE);
             robot.Write(new Message((MessageID)cpMove));
             rt_mutex_release(&mutex_robot);
+        }
+        cout << endl << flush;
+    }
+}
+
+void Tasks::BatteryTask(void *arg) {
+    cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+
+    /**************************************************************************************/
+    /* The task starts here                                                               */
+    /**************************************************************************************/
+    rt_task_set_periodic(NULL, TM_NOW, 500000000);
+
+    while (1) {
+        rt_task_wait_period(NULL);
+        cout << "Periodic battery update";
+        rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+        int rs = robotStarted;
+        rt_mutex_release(&mutex_robotStarted);
+        if (rs == 1) {
+            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+            Message *msg = robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET));
+            rt_mutex_release(&mutex_robot);
+
+            cout << "Battery answer: " << msg->ToString() << endl << flush;
+
+            WriteInQueue(&q_messageToMon, msg);
         }
         cout << endl << flush;
     }
