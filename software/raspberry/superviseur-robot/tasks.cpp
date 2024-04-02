@@ -74,6 +74,10 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_mutex_create(&mutex_battery, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
     cout << "Mutexes created successfully" << endl << flush;
 
     /**************************************************************************************/
@@ -284,6 +288,10 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_move, TM_INFINITE);
             move = msgRcv->GetID();
             rt_mutex_release(&mutex_move);
+        } else if (msgRcv->CompareID(MESSAGE_ROBOT_BATTERY_GET)) {
+            rt_mutex_acquire(&mutex_battery, TM_INFINITE);
+            batteryEnabled = true;
+            rt_mutex_release(&mutex_battery);
         }
         delete(msgRcv); // mus be deleted manually, no consumer
     }
@@ -413,6 +421,7 @@ void Tasks::BatteryTask(void *arg) {
         if (rs == 1) {
             rt_mutex_acquire(&mutex_battery, TM_INFINITE);
             cpBattEn = batteryEnabled;
+            batteryEnabled = false;
             rt_mutex_release(&mutex_battery);
             if (cpBattEn) {
                 rt_mutex_acquire(&mutex_robot, TM_INFINITE);
