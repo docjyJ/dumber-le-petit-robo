@@ -26,6 +26,7 @@
 #define PRIORITY_TRECEIVEFROMMON 25
 #define PRIORITY_TSTARTROBOT 20
 #define PRIORITY_TCAMERA 21
+#define PRIORITY_TBATTERY 19
 
 /*
  * Some remarks:
@@ -123,7 +124,7 @@ void Tasks::Init() {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_create(&th_battery, "th_battery", 0, PRIORITY_TCAMERA, 0)) {
+    if (err = rt_task_create(&th_battery, "th_battery", 0, PRIORITY_TBATTERY, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -392,6 +393,8 @@ void Tasks::MoveTask(void *arg) {
 }
 
 void Tasks::BatteryTask(void *arg) {
+    bool cpBattEn;
+
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
     // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
@@ -408,13 +411,18 @@ void Tasks::BatteryTask(void *arg) {
         int rs = robotStarted;
         rt_mutex_release(&mutex_robotStarted);
         if (rs == 1) {
-            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
-            Message *msg = robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET));
-            rt_mutex_release(&mutex_robot);
+            rt_mutex_acquire(&mutex_battery, TM_INFINITE);
+            cpBattEn = batteryEnabled;
+            rt_mutex_release(&mutex_battery);
+            if (cpBattEn) {
+                rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+                Message *msg = robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET));
+                rt_mutex_release(&mutex_robot);
 
-            cout << "Battery answer: " << msg->ToString() << endl << flush;
+                cout << "Battery answer: " << msg->ToString() << endl << flush;
 
-            WriteInQueue(&q_messageToMon, msg);
+                WriteInQueue(&q_messageToMon, msg);
+            }
         }
         cout << endl << flush;
     }
