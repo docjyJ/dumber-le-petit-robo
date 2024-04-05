@@ -356,6 +356,9 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
             findArenaStarted = true;
             rt_mutex_release(&mutex_findArena);
+            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+            arenaSaved = Arena();
+            rt_mutex_release(&mutex_arenaSaved);
         } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_CONFIRM)) {
             rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
             arenaIsConfirmed = true;
@@ -643,8 +646,6 @@ void Tasks::FindArenaTask(void *arg) {
                     rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
                     if (arenaIsConfirmed) {
                         arenaSaved = arena;
-                    } else {
-                        arena = Arena();
                     }
                     rt_mutex_release(&mutex_arenaSaved);
                 }
