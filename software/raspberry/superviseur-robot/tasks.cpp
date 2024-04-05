@@ -391,7 +391,7 @@ void Tasks::OpenComCamera(void *arg) {
         rt_sem_p(&sem_openComCamera, TM_INFINITE);
         cout << "Open camera (";
         rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-        status = camera.Open();
+        status = camera->Open();
         rt_mutex_release(&mutex_camera);
         cout << status;
         cout << ")" << endl << flush;
@@ -423,20 +423,16 @@ void Tasks::CloseComCamera(void *arg) {
         rt_sem_p(&sem_closeComCamera, TM_INFINITE);
         cout << "Close camera (";
         rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-        status = camera->Close();
+        camera->Close();
         rt_mutex_release(&mutex_camera);
         cout << "1";
         cout << ")" << endl << flush;
 
         Message * msgSend;
-        if (status < 0) {
-            msgSend = new Message(MESSAGE_ANSWER_NACK);
-        } else {
-            rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
-            cameraStarted = 0;
-            rt_mutex_release(&mutex_cameraStarted);
-            msgSend = new Message(MESSAGE_ANSWER_ACK);
-        }
+        rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+        cameraStarted = 0;
+        rt_mutex_release(&mutex_cameraStarted);
+        msgSend = new Message(MESSAGE_ANSWER_ACK);
         WriteInQueue(&q_messageToMon, msgSend); // msgSend will be deleted by sendToMon
     }
 }
