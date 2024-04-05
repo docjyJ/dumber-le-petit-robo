@@ -635,7 +635,7 @@ void Tasks::FindArenaTask(void *arg) {
             if (img != nullptr) {
                 arena = img->SearchArena();
                 if (arena.IsEmpty()) {
-                    WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_NACK));
+                    WriteInQueue(&q_messageToMon, new MessageImg(MESSAGE_CAM_IMAGE, img));
                 } else {
                     img->DrawArena(arena);
                     WriteInQueue(&q_messageToMon, new MessageImg(MESSAGE_CAM_IMAGE, img));
