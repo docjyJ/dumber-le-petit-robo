@@ -65,9 +65,11 @@ private:
     ComMonitor monitor;
     ComRobot robot;
     Camera* camera = new Camera(sm, 5);
+    Arena arenaSaved;
     int robotStarted = 0;
     int cameraStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
+    bool arenaIsConfirmed = false;
     bool batteryEnabled = false;
     
     /**********************************************************************/
@@ -82,6 +84,7 @@ private:
     RT_TASK th_startRobot;
     RT_TASK th_move;
     RT_TASK th_sendImage;
+    RT_TASK th_findArena;
     RT_TASK th_battery;
     
     /**********************************************************************/
@@ -93,6 +96,8 @@ private:
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_cameraStarted;
     RT_MUTEX mutex_move;
+    RT_MUTEX mutex_findArena;
+    RT_MUTEX mutex_arenaSaved;
     RT_MUTEX mutex_battery;
 
     /**********************************************************************/
@@ -104,6 +109,8 @@ private:
     RT_SEM sem_closeComCamera;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
+    RT_SEM sem_findArena;
+    RT_SEM sem_arenaConfirmed;
 
     /**********************************************************************/
     /* Message queues                                                     */
@@ -158,6 +165,11 @@ private:
      * @brief Thread handling camera image of the robot.
      */
     void SendImageTask(void *arg);
+
+    /**
+     * @brief Thread handling arena detection of the robot.
+     */
+    void FindArenaTask(void *arg);
 
     /**
      * @brief Thread handling battery level.

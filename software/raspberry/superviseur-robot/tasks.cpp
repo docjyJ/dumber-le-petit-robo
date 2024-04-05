@@ -82,6 +82,14 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_mutex_create(&mutex_findArena, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_mutex_create(&mutex_arenaSaved, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
     if (err = rt_mutex_create(&mutex_battery, NULL)) {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
@@ -112,6 +120,14 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_sem_create(&sem_startRobot, NULL, 0, S_FIFO)) {
+        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_sem_create(&sem_findArena, NULL, 0, S_FIFO)) {
+        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_sem_create(&sem_arenaConfirmed, NULL, 0, S_FIFO)) {
         cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -153,6 +169,10 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_create(&th_sendImage, "th_sendImage", 0, PRIORITY_TCAMERA, 0)) {
+        cerr << "Error task create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_create(&th_findArena, "th_findArena", 0, PRIORITY_TCAMERA, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -213,6 +233,10 @@ void Tasks::Run() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&th_sendImage, (void(*)(void*)) & Tasks::SendImageTask, this)) {
+        cerr << "Error task start: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_start(&th_findArena, (void(*)(void*)) & Tasks::FindArenaTask, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -313,7 +337,7 @@ void Tasks::ReceiveFromMonTask(void *arg) {
         cout << "Rcv <= " << msgRcv->ToString() << endl << flush;
 
         if (msgRcv->CompareID(MESSAGE_MONITOR_LOST)) {
-            delete(msgRcv);
+            delete (msgRcv);
             exit(-1);
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
             rt_sem_v(&sem_openComRobot);
@@ -332,6 +356,18 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_move, TM_INFINITE);
             move = msgRcv->GetID();
             rt_mutex_release(&mutex_move);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_ASK_ARENA)) {
+            rt_sem_v(&sem_findArena);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_CONFIRM)) {
+            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+            arenaIsConfirmed = true;
+            rt_sem_v(&sem_arenaConfirmed);
+            rt_mutex_release(&mutex_arenaSaved);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_INFIRM)) {
+            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+            arenaIsConfirmed = false;
+            rt_sem_v(&sem_arenaConfirmed);
+            rt_mutex_release(&mutex_arenaSaved);
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_BATTERY_GET)) {
             rt_mutex_acquire(&mutex_battery, TM_INFINITE);
             batteryEnabled = true;
@@ -531,6 +567,7 @@ void Tasks::SendImageTask(void *arg) {
         int rs = cameraStarted;
         rt_mutex_release(&mutex_cameraStarted);
         if (rs == 1) {
+            rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
             rt_mutex_acquire(&mutex_camera, TM_INFINITE);
             isOpen = camera->IsOpen();
             if (isOpen) {
@@ -540,10 +577,67 @@ void Tasks::SendImageTask(void *arg) {
             }
             rt_mutex_release(&mutex_camera);
             if (img != nullptr) {
+                rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+                if (!arenaSaved.IsEmpty()) {
+                    img->DrawArena(arenaSaved);
+                }
+                rt_mutex_release(&mutex_arenaSaved);
                 msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
                 cout << "Image answer: " << msgImg->ToString() << endl << flush;
                 WriteInQueue(&q_messageToMon, msgImg);
             }
+            rt_mutex_release(&mutex_findArena);
+        }
+        cout << endl << flush;
+    }
+}
+
+/**
+ * @brief Thread handling arena detection of the robot.
+ */
+void Tasks::FindArenaTask(void *arg) {
+    bool isOpen;
+    Img *img;
+    Arena arena;
+
+    cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+
+    while (1) {
+        rt_sem_p(&sem_findArena, TM_INFINITE);
+        cout << "Periodic arena update";
+        rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+        int rs = cameraStarted;
+        rt_mutex_release(&mutex_cameraStarted);
+        if (rs == 1) {
+            rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
+            rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+            isOpen = camera->IsOpen();
+            if (isOpen) {
+                img = new Img(camera->Grab());
+            } else {
+                img = nullptr;
+            }
+            rt_mutex_release(&mutex_camera);
+            if (img != nullptr) {
+                arena = img->SearchArena();
+                if (arena.IsEmpty()) {
+                    WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_NACK));
+                } else {
+                    img->DrawArena(arena);
+                    write(&q_messageToMon, new MessageImg(MESSAGE_CAM_IMAGE, img));
+                    rt_sem_p(&sem_arenaConfirmed, TM_INFINITE);
+                    rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+                    if (arenaIsConfirmed) {
+                        arenaSaved = arena;
+                    } else {
+                        arena = Arena();
+                    }
+                    rt_mutex_release(&mutex_arenaSaved);
+                }
+            }
+            rt_mutex_release(&mutex_findArena);
         }
         cout << endl << flush;
     }
