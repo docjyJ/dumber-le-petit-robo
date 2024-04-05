@@ -64,8 +64,9 @@ private:
     /**********************************************************************/
     ComMonitor monitor;
     ComRobot robot;
-    Camera camera;
+    Camera camera = new Camera(sm, 5);;
     int robotStarted = 0;
+    int cameraStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
     bool batteryEnabled = false;
     
@@ -76,9 +77,11 @@ private:
     RT_TASK th_sendToMon;
     RT_TASK th_receiveFromMon;
     RT_TASK th_openComRobot;
-    RT_TASK th_openCamRobot;
+    RT_TASK th_openComCamera;
+    RT_TASK th_closeComCamera;
     RT_TASK th_startRobot;
     RT_TASK th_move;
+    RT_TASK th_sendImage;
     RT_TASK th_battery;
     
     /**********************************************************************/
@@ -88,6 +91,7 @@ private:
     RT_MUTEX mutex_robot;
     RT_MUTEX mutex_camera;
     RT_MUTEX mutex_robotStarted;
+    RT_MUTEX mutex_cameraStarted;
     RT_MUTEX mutex_move;
     RT_MUTEX mutex_battery;
 
@@ -96,7 +100,8 @@ private:
     /**********************************************************************/
     RT_SEM sem_barrier;
     RT_SEM sem_openComRobot;
-    RT_SEM sem_openCamRobot;
+    RT_SEM sem_openComCamera;
+    RT_SEM sem_closeComCamera;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
 
@@ -130,6 +135,16 @@ private:
     void OpenComRobot(void *arg);
 
     /**
+     * @brief Thread opening communication with the camera.
+     */
+    void OpenComCamera(void *arg);
+
+    /**
+     * @brief Thread closing communication with the camera.
+     */
+    void CloseComCamera(void *arg);
+
+    /**
      * @brief Thread starting the communication with the robot.
      */
     void StartRobotTask(void *arg);
@@ -138,6 +153,16 @@ private:
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
+
+    /**
+     * @brief Thread handling camera image of the robot.
+     */
+    void SendImageTask(void *arg);
+
+    /**
+     * @brief Thread handling battery level.
+     */
+    void BatteryTask(void *arg);
     
     /**********************************************************************/
     /* Queue services                                                     */
@@ -155,8 +180,6 @@ private:
      * @return Message read
      */
     Message *ReadInQueue(RT_QUEUE *queue);
-
-    void BatteryTask(void *arg);
 };
 
 #endif // __TASKS_H__ 
