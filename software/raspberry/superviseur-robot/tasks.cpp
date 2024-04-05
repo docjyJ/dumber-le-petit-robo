@@ -626,7 +626,7 @@ void Tasks::FindArenaTask(void *arg) {
                     WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_NACK));
                 } else {
                     img->DrawArena(arena);
-                    write(&q_messageToMon, new MessageImg(MESSAGE_CAM_IMAGE, img));
+                    WriteInQueue(&q_messageToMon, new MessageImg(MESSAGE_CAM_IMAGE, img));
                     rt_sem_p(&sem_arenaConfirmed, TM_INFINITE);
                     rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
                     if (arenaIsConfirmed) {
