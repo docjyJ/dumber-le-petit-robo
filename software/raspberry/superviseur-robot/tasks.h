@@ -69,6 +69,7 @@ private:
     int robotStarted = 0;
     int cameraStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
+    bool findArenaStarted = false;
     bool arenaIsConfirmed = false;
     bool batteryEnabled = false;
     
@@ -109,7 +110,6 @@ private:
     RT_SEM sem_closeComCamera;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
-    RT_SEM sem_findArena;
     RT_SEM sem_arenaConfirmed;
 
     /**********************************************************************/
