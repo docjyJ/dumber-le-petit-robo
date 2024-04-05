@@ -609,8 +609,13 @@ void Tasks::FindArenaTask(void *arg) {
     // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
 
+    /**************************************************************************************/
+    /* The task starts here                                                               */
+    /**************************************************************************************/
+    rt_task_set_periodic(NULL, TM_NOW, 500000000);
+
     while (1) {
-        rt_sem_p(&sem_findArena, TM_INFINITE);
+        rt_task_wait_period(NULL);
         cout << "Periodic arena update";
         rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
         int rs = cameraStarted;
