@@ -533,7 +533,7 @@ void Tasks::SendImageTask(void *arg) {
         if (rs == 1) {
             rt_mutex_acquire(&mutex_camera, TM_INFINITE);
             isOpen = camera->IsOpen();
-            if (!isOpen) {
+            if (isOpen) {
                 img = new Img(camera->Grab());
             } else {
                 img = nullptr;
