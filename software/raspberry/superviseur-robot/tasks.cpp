@@ -610,6 +610,7 @@ void Tasks::FindArenaTask(void *arg) {
         rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
         int rs = cameraStarted;
         rt_mutex_release(&mutex_cameraStarted);
+        cout << "arena_rs" << rs;
         if (rs == 1) {
             rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
             rt_mutex_acquire(&mutex_camera, TM_INFINITE);
@@ -622,6 +623,7 @@ void Tasks::FindArenaTask(void *arg) {
             rt_mutex_release(&mutex_camera);
             if (img != nullptr) {
                 arena = img->SearchArena();
+                cout << "nak ?" << rs;
                 if (arena.IsEmpty()) {
                     WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_NACK));
                 } else {
