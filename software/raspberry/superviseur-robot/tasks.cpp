@@ -511,6 +511,7 @@ void Tasks::MoveTask(void *arg) {
  * @brief Thread handling camera image of the robot.
  */
 void Tasks::SendImageTask(void *arg) {
+    bool isOpen;
     Img *img;
     MessageImg *msgImg;
 
@@ -531,11 +532,18 @@ void Tasks::SendImageTask(void *arg) {
         rt_mutex_release(&mutex_cameraStarted);
         if (rs == 1) {
             rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-            img = new Img(camera->Grab());
+            isOpen = camera->IsOpen();
+            if (!isOpen) {
+                img = new Img(camera->Grab());
+            } else {
+                img = nullptr;
+            }
             rt_mutex_release(&mutex_camera);
-            msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
-            cout << "Image answer: " << msgImg->ToString() << endl << flush;
-            WriteInQueue(&q_messageToMon, msgImg);
+            if (img != nullptr) {
+                msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
+                cout << "Image answer: " << msgImg->ToString() << endl << flush;
+                WriteInQueue(&q_messageToMon, msgImg);
+            }
         }
         cout << endl << flush;
     }
