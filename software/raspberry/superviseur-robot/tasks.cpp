@@ -596,21 +596,17 @@ void Tasks::SendImageTask(void *arg) {
             img = camera->IsOpen() ? new Img(camera->Grab()) : nullptr;
             rt_mutex_release(&mutex_camera);
             if (img != nullptr) {
+                rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
+                bool findPosOK = findPositionStarted;
+                rt_mutex_release(&mutex_findPosition);
+                positions.clear();
                 rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
-                if (!arenaSaved.IsEmpty()) {
-                    img->DrawArena(arenaSaved);
-                    rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
-                    bool findPosOK = findPositionStarted;
-                    rt_mutex_release(&mutex_findPosition);
-                    if (findPosOK)
-                        positions = img->SearchRobot(arenaSaved);
-                }
+                if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
+                if (findPosOK) positions = img->SearchRobot(arenaSaved);
                 rt_mutex_release(&mutex_arenaSaved);
-                if (!positions.empty()) {
-                    img->DrawRobot(positions.front());
+                for (Position p : positions) {
                     WriteInQueue(&q_messageToMon, new MessagePosition(MESSAGE_CAM_POSITION, positions.front()));
-                } else {
-                    WriteInQueue(&q_messageToMon, new MessagePosition(MESSAGE_CAM_POSITION, *(new Position())));
+                    img->DrawRobot(p);
                 }
                 msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
                 cout << "Image answer: " << msgImg->ToString() << endl << flush;
