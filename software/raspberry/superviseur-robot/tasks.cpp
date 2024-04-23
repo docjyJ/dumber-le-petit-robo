@@ -599,13 +599,13 @@ void Tasks::SendImageTask(void *arg) {
                 rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
                 bool findPosOK = findPositionStarted;
                 rt_mutex_release(&mutex_findPosition);
-                positions.clear();
                 rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
                 if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
                 if (findPosOK) positions = img->SearchRobot(arenaSaved);
+                else positions = std::list<Position>();
                 rt_mutex_release(&mutex_arenaSaved);
                 for (Position p : positions) {
-                    WriteInQueue(&q_messageToMon, new MessagePosition(MESSAGE_CAM_POSITION, positions.front()));
+                    WriteInQueue(&q_messageToMon, new MessagePosition(MESSAGE_CAM_POSITION, p));
                     img->DrawRobot(p);
                 }
                 msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
