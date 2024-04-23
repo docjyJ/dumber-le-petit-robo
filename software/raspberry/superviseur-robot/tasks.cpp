@@ -605,6 +605,7 @@ void Tasks::SendImageTask(void *arg) {
                 else positions = std::list<Position>();
                 rt_mutex_release(&mutex_arenaSaved);
                 for (Position p : positions) {
+                    cout << "Robot position: " << p.ToString() << endl << flush;
                     WriteInQueue(&q_messageToMon, new MessagePosition(MESSAGE_CAM_POSITION, p));
                     img->DrawRobot(p);
                 }
