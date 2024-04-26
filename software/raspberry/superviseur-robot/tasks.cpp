@@ -252,8 +252,18 @@ void Tasks::Run() {
  * @brief Arrêt des tâches
  */
 void Tasks::Stop() {
-    monitor.Close();
+    rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+    cameraStarted = 0;
+    rt_mutex_release(&mutex_cameraStarted);
+    rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+    camera->Close();
+    rt_mutex_release(&mutex_camera);
+    rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+    robotStarted = 0;
+    rt_mutex_release(&mutex_robotStarted);
+    rt_mutex_acquire(&mutex_robot, TM_INFINITE);
     robot.Close();
+    rt_mutex_release(&mutex_robot);
 }
 
 /**
@@ -338,31 +348,7 @@ void Tasks::ReceiveFromMonTask(void *arg) {
         cout << "Rcv <= " << msgRcv->ToString() << endl << flush;
 
         if (msgRcv->CompareID(MESSAGE_MONITOR_LOST)) {
-            rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
-            int oldCameraStarted = cameraStarted;
-            cameraStarted = 0;
-            rt_mutex_release(&mutex_cameraStarted);
-            if (oldCameraStarted == 1) {
-                rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-                camera->Close();
-                rt_mutex_release(&mutex_camera);
-            }
-            rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
-            int oldRobotStarted = robotStarted;
-            robotStarted = 0;
-            rt_mutex_release(&mutex_robotStarted);
-            if (oldRobotStarted == 1) {
-                rt_mutex_acquire(&mutex_robot, TM_INFINITE);
-                robot.Close();
-                rt_mutex_release(&mutex_robot);
-            }
-            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-            monitor.Close();
-            rt_mutex_release(&mutex_monitor);
-            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
-            arenaSaved = Arena();
-            rt_mutex_release(&mutex_arenaSaved);
-
+            Stop();
             cout << "Lost connection with monitor" << endl << flush;
             Join();
 
