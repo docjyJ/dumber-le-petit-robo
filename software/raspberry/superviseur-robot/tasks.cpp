@@ -338,62 +338,88 @@ void Tasks::ReceiveFromMonTask(void *arg) {
         cout << "Rcv <= " << msgRcv->ToString() << endl << flush;
 
         if (msgRcv->CompareID(MESSAGE_MONITOR_LOST)) {
-            delete (msgRcv);
-            exit(-1);
-        } else if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
-            rt_sem_v(&sem_openComRobot);
-        } else if (msgRcv->CompareID(MESSAGE_CAM_OPEN)) {
-            rt_sem_v(&sem_openComCamera);
-        } else if (msgRcv->CompareID(MESSAGE_CAM_CLOSE)) {
-            rt_sem_v(&sem_closeComCamera);
-        } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITHOUT_WD)) {
-            rt_sem_v(&sem_startRobot);
-        } else if (msgRcv->CompareID(MESSAGE_ROBOT_GO_FORWARD) ||
-                msgRcv->CompareID(MESSAGE_ROBOT_GO_BACKWARD) ||
-                msgRcv->CompareID(MESSAGE_ROBOT_GO_LEFT) ||
-                msgRcv->CompareID(MESSAGE_ROBOT_GO_RIGHT) ||
-                msgRcv->CompareID(MESSAGE_ROBOT_STOP)) {
+            rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+            int oldCameraStarted = cameraStarted;
+            cameraStarted = 0;
+            rt_mutex_release(&mutex_cameraStarted);
+            if (oldCameraStarted == 1) {
+                rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+                camera->Close();
+                rt_mutex_release(&mutex_camera);
+            }
+            rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+            int oldRobotStarted = robotStarted;
+            robotStarted = 0;
+            rt_mutex_release(&mutex_robotStarted);
+            if (oldRobotStarted == 1) {
+                rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+                robot.Close();
+                rt_mutex_release(&mutex_robot);
+            }
+            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+            monitor.Close();
+            rt_mutex_release(&mutex_monitor);
 
-            rt_mutex_acquire(&mutex_move, TM_INFINITE);
-            move = msgRcv->GetID();
-            rt_mutex_release(&mutex_move);
-        } else if (msgRcv->CompareID(MESSAGE_CAM_ASK_ARENA)) {
-            rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
-            findArenaStarted = true;
-            rt_mutex_release(&mutex_findArena);
-            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
-            arenaSaved = Arena();
-            rt_mutex_release(&mutex_arenaSaved);
-        } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_CONFIRM)) {
-            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
-            arenaIsConfirmed = true;
-            rt_sem_v(&sem_arenaConfirmed);
-            rt_mutex_release(&mutex_arenaSaved);
-            rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
-            findArenaStarted = false;
-            rt_mutex_release(&mutex_findArena);
-        } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_INFIRM)) {
-            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
-            arenaIsConfirmed = false;
-            rt_sem_v(&sem_arenaConfirmed);
-            rt_mutex_release(&mutex_arenaSaved);
-            rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
-            findArenaStarted = false;
-            rt_mutex_release(&mutex_findArena);
-        } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_START)) {
-            rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
-            findPositionStarted = true;
-            rt_mutex_release(&mutex_findPosition);
-        } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_STOP)) {
-            rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
-            findPositionStarted = false;
-            rt_mutex_release(&mutex_findPosition);
-        } else if (msgRcv->CompareID(MESSAGE_ROBOT_BATTERY_GET)) {
-            rt_mutex_acquire(&mutex_battery, TM_INFINITE);
-            batteryEnabled = true;
-            rt_mutex_release(&mutex_battery);
+            cout << "Lost connection with monitor" << endl << flush;
+            delete (msgRcv);
+            exit(-1)
+
+        } else {
+            if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
+                rt_sem_v(&sem_openComRobot);
+            } else if (msgRcv->CompareID(MESSAGE_CAM_OPEN)) {
+                rt_sem_v(&sem_openComCamera);
+            } else if (msgRcv->CompareID(MESSAGE_CAM_CLOSE)) {
+                rt_sem_v(&sem_closeComCamera);
+            } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITHOUT_WD)) {
+                rt_sem_v(&sem_startRobot);
+            } else if (msgRcv->CompareID(MESSAGE_ROBOT_GO_FORWARD) ||
+                    msgRcv->CompareID(MESSAGE_ROBOT_GO_BACKWARD) ||
+                    msgRcv->CompareID(MESSAGE_ROBOT_GO_LEFT) ||
+                    msgRcv->CompareID(MESSAGE_ROBOT_GO_RIGHT) ||
+                    msgRcv->CompareID(MESSAGE_ROBOT_STOP)) {
+
+                rt_mutex_acquire(&mutex_move, TM_INFINITE);
+                move = msgRcv->GetID();
+                rt_mutex_release(&mutex_move);
+            } else if (msgRcv->CompareID(MESSAGE_CAM_ASK_ARENA)) {
+                rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
+                findArenaStarted = true;
+                rt_mutex_release(&mutex_findArena);
+                rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+                arenaSaved = Arena();
+                rt_mutex_release(&mutex_arenaSaved);
+            } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_CONFIRM)) {
+                rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+                arenaIsConfirmed = true;
+                rt_sem_v(&sem_arenaConfirmed);
+                rt_mutex_release(&mutex_arenaSaved);
+                rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
+                findArenaStarted = false;
+                rt_mutex_release(&mutex_findArena);
+            } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_INFIRM)) {
+                rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+                arenaIsConfirmed = false;
+                rt_sem_v(&sem_arenaConfirmed);
+                rt_mutex_release(&mutex_arenaSaved);
+                rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
+                findArenaStarted = false;
+                rt_mutex_release(&mutex_findArena);
+            } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_START)) {
+                rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
+                findPositionStarted = true;
+                rt_mutex_release(&mutex_findPosition);
+            } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_STOP)) {
+                rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
+                findPositionStarted = false;
+                rt_mutex_release(&mutex_findPosition);
+            } else if (msgRcv->CompareID(MESSAGE_ROBOT_BATTERY_GET)) {
+                rt_mutex_acquire(&mutex_battery, TM_INFINITE);
+                batteryEnabled = true;
+                rt_mutex_release(&mutex_battery);
+            }
+            delete (msgRcv);
         }
-        delete (msgRcv); // mus be deleted manually, no consumer
     }
 }
 
