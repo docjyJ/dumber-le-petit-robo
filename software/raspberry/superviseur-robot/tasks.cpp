@@ -359,10 +359,11 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
             monitor.Close();
             rt_mutex_release(&mutex_monitor);
+            rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+            arenaSaved = Arena();
+            rt_mutex_release(&mutex_arenaSaved);
 
             cout << "Lost connection with monitor" << endl << flush;
-            delete (msgRcv);
-            exit(-1);
 
         } else {
             if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
@@ -418,8 +419,8 @@ void Tasks::ReceiveFromMonTask(void *arg) {
                 batteryEnabled = true;
                 rt_mutex_release(&mutex_battery);
             }
-            delete (msgRcv);
         }
+        delete (msgRcv);
     }
 }
 
