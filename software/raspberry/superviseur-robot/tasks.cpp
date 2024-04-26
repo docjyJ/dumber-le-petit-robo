@@ -364,6 +364,7 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_release(&mutex_arenaSaved);
 
             cout << "Lost connection with monitor" << endl << flush;
+            Join();
 
         } else {
             if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
