@@ -602,7 +602,9 @@ void Tasks::SendImageTask(void *arg) {
                 std::list<Position> positions;
                 rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
                 if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
-                if (findPosOK) positions = img->SearchRobot(arenaSaved);
+                if (findPosOK)
+                    img->DrawAllRobots(img->SearchRobot(arenaSaved));
+                //if (findPosOK) positions = img->SearchRobot(arenaSaved);
                 rt_mutex_release(&mutex_arenaSaved);
                 if (findPosOK)
                     cout << "Number of robots: " << positions.size() << endl << flush;
