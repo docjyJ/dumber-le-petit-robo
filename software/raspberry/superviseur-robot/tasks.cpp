@@ -381,7 +381,6 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             findArenaStarted = false;
             rt_mutex_release(&mutex_findArena);
         } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_START)) {
-            cout << "Start find position STP VRAIMENTTTT" << endl << flush;
             rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
             findPositionStarted = true;
             rt_mutex_release(&mutex_findPosition);
@@ -393,11 +392,6 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_battery, TM_INFINITE);
             batteryEnabled = true;
             rt_mutex_release(&mutex_battery);
-        } else {
-            cout << "==============================" << endl << flush;
-            cout << "Unknown message" << endl << flush;
-            cout << msgRcv->ToString() << endl << flush;
-            cout << "==============================" << endl << flush;
         }
         delete (msgRcv); // mus be deleted manually, no consumer
     }
@@ -604,11 +598,11 @@ void Tasks::SendImageTask(void *arg) {
             rt_mutex_release(&mutex_camera);
             if (img != nullptr) {
                 rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
-                findPosOK = findPositionStarted ? true : false;
+                findPosOK = findPositionStarted;
                 rt_mutex_release(&mutex_findPosition);
                 rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
                 if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
-                positions = findPosOK ? std::list(img->SearchRobot(arenaSaved)) : std::list<Position>()
+                positions = findPosOK ? std::list<Position>(img->SearchRobot(arenaSaved)) : std::list<Position>()
                 rt_mutex_release(&mutex_arenaSaved);
                 if (findPosOK) {
                     cout << "Number of robots: " << positions.size() << endl << flush;
