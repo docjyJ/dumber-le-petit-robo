@@ -362,7 +362,7 @@ void Tasks::ReceiveFromMonTask(void *arg) {
 
             cout << "Lost connection with monitor" << endl << flush;
             delete (msgRcv);
-            exit(-1)
+            exit(-1);
 
         } else {
             if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
