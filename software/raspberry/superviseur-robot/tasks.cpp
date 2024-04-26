@@ -574,6 +574,7 @@ void Tasks::MoveTask(void *arg) {
  */
 void Tasks::SendImageTask(void *arg) {
     bool isOpen;
+    bool findPosOK;
     Img *img;
     MessageImg *msgImg;
     Arena arena;
@@ -603,7 +604,7 @@ void Tasks::SendImageTask(void *arg) {
             rt_mutex_release(&mutex_camera);
             if (img != nullptr) {
                 rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
-                bool findPosOK = findPositionStarted;
+                findPosOK = findPositionStarted ? true : false;
                 rt_mutex_release(&mutex_findPosition);
                 rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
                 if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
