@@ -603,6 +603,8 @@ void Tasks::SendImageTask(void *arg) {
                 if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
                 positions = findPosOK ? std::list(img->SearchRobot(arenaSaved)) : std::list<Position>()
                 rt_mutex_release(&mutex_arenaSaved);
+                if (findPosOK)
+                    cout << "Number of robots: " << positions.size() << endl << flush;
                 for (Position p : positions) {
                     cout << "Robot position: " << p.ToString() << endl << flush;
                     WriteInQueue(&q_messageToMon, new MessagePosition(MESSAGE_CAM_POSITION, p));
