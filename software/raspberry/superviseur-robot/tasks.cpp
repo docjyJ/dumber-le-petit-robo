@@ -572,7 +572,6 @@ void Tasks::SendImageTask(void *arg) {
     Img *img;
     MessageImg *msgImg;
     Arena arena;
-    std::list<Position> positions;
 
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
     // Synchronization barrier (waiting that all tasks are starting)
@@ -600,11 +599,12 @@ void Tasks::SendImageTask(void *arg) {
                 rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
                 findPosOK = findPositionStarted;
                 rt_mutex_release(&mutex_findPosition);
+                std::list<Position> positions;
                 rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
                 if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
-                positions = findPosOK ? img->SearchRobot(arenaSaved) : std::list<Position>();
+                if (findPosOK) positions = img->SearchRobot(arenaSaved);
                 rt_mutex_release(&mutex_arenaSaved);
-                if (findPosOK) {
+                if (findPosOK)
                     cout << "Number of robots: " << positions.size() << endl << flush;
                 }
                 for (Position p : positions) {
