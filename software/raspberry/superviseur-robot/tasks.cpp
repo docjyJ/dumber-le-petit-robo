@@ -381,6 +381,7 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             findArenaStarted = false;
             rt_mutex_release(&mutex_findArena);
         } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_START)) {
+            cout << "Start find position STP VRAIMENTTTT" << endl << flush;
             rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
             findPositionStarted = true;
             rt_mutex_release(&mutex_findPosition);
@@ -603,8 +604,9 @@ void Tasks::SendImageTask(void *arg) {
                 if (!arenaSaved.IsEmpty()) img->DrawArena(arenaSaved);
                 positions = findPosOK ? std::list(img->SearchRobot(arenaSaved)) : std::list<Position>()
                 rt_mutex_release(&mutex_arenaSaved);
-                if (findPosOK)
+                if (findPosOK) {
                     cout << "Number of robots: " << positions.size() << endl << flush;
+                }
                 for (Position p : positions) {
                     cout << "Robot position: " << p.ToString() << endl << flush;
                     WriteInQueue(&q_messageToMon, new MessagePosition(MESSAGE_CAM_POSITION, p));
