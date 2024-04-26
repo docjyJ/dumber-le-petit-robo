@@ -393,6 +393,11 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_battery, TM_INFINITE);
             batteryEnabled = true;
             rt_mutex_release(&mutex_battery);
+        } else {
+            cout << "==============================" << endl << flush;
+            cout << "Unknown message" << endl << flush;
+            cout << msgRcv->ToString() << endl << flush;
+            cout << "==============================" << endl << flush;
         }
         delete (msgRcv); // mus be deleted manually, no consumer
     }
