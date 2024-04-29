@@ -813,6 +813,7 @@ void Tasks::BatteryTask(void *arg) {
 
 void Tasks::SendToRobot(Message * msg) {
     rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+    robot.Write(new Message(MESSAGE_ROBOT_RELOAD_WD));
     Message *ret = robot.Write(msg);
     rt_mutex_release(&mutex_robot);
     MessageID id = ret->GetID();
@@ -832,9 +833,6 @@ void Tasks::SendToRobot(Message * msg) {
             messageRobotCount = 0;
         }
     } else {
-        rt_mutex_acquire(&mutex_robot, TM_INFINITE);
-        robot.Write(new Message(MESSAGE_ROBOT_RELOAD_WD));
-        rt_mutex_release(&mutex_robot);
         messageRobotCount = 0;
     }
 }
