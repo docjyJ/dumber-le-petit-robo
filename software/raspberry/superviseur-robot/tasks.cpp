@@ -598,10 +598,7 @@ void Tasks::MoveTask(void *arg) {
             rt_mutex_release(&mutex_move);
 
             cout << " move: " << cpMove;
-
-            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
-            robot.Write(new Message((MessageID) cpMove));
-            rt_mutex_release(&mutex_robot);
+            SendToRobot(new Message((MessageID) cpMove));
         }
         cout << endl << flush;
     }
@@ -756,6 +753,26 @@ void Tasks::BatteryTask(void *arg) {
             }
         }
         cout << endl << flush;
+    }
+}
+
+void Tasks::SendToRobot(Message * msg) {
+    rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+    Message *ret = robot.Write(msg);
+    rt_mutex_release(&mutex_robot);
+    MessageID id = ret->GetID();
+    if(id == MESSAGE_ANSWER_ROBOT_TIMEOUT ||
+            id == MESSAGE_ANSWER_ROBOT_ERROR ||
+            id == MESSAGE_ANSWER_ROBOT_UNKNOWN_COMMAND) {
+        messageRobotCount++;
+        if(messageRobotCount > 2) {
+            rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+            robotStarted = 0;
+            rt_mutex_release(&mutex_robotStarted);
+            messageRobotCount = 0;
+        }
+    } else {
+        messageRobotCount = 0;
     }
 }
 

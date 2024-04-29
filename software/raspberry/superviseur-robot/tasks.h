@@ -67,6 +67,7 @@ private:
     Camera* camera = new Camera(sm, 5);
     Arena arenaSaved;
     int robotStarted = 0;
+    int messageRobotCount = 0;
     int cameraStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
     bool findArenaStarted = false;
@@ -177,6 +178,8 @@ private:
      * @brief Thread handling battery level.
      */
     void BatteryTask(void *arg);
+
+    void SendToRobot(Message *msg);
 
     /**********************************************************************/
     /* Queue services                                                     */
