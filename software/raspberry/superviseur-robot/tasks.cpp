@@ -264,17 +264,6 @@ void Tasks::Stop() {
     rt_mutex_acquire(&mutex_robot, TM_INFINITE);
     robot.Close();
     rt_mutex_release(&mutex_robot);
-    rt_task_delete(&th_server);
-    rt_task_delete(&th_sendToMon);
-    rt_task_delete(&th_receiveFromMon);
-    rt_task_delete(&th_openComRobot);
-    rt_task_delete(&th_openComCamera);
-    rt_task_delete(&th_closeComCamera);
-    rt_task_delete(&th_startRobot);
-    rt_task_delete(&th_move);
-    rt_task_delete(&th_sendImage);
-    rt_task_delete(&th_findArena);
-    rt_task_delete(&th_battery);
 
 }
 
@@ -362,8 +351,15 @@ void Tasks::ReceiveFromMonTask(void *arg) {
         if (msgRcv->CompareID(MESSAGE_MONITOR_LOST)) {
             Stop();
             cout << "Lost connection with monitor" << endl << flush;
-            Run();
-            Join();
+            int status;
+            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+            status = monitor.Open(SERVER_PORT);
+            rt_mutex_release(&mutex_monitor);
+            if (status < 0)
+                throw std::runtime_error{
+                        "Unable to start server on port " + std::to_string(SERVER_PORT)
+                };
+            monitor.AcceptClient();
 
         } else {
             if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
