@@ -264,28 +264,14 @@ void Tasks::Stop() {
     rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
     arenaSaved = Arena();
     rt_mutex_release(&mutex_arenaSaved);
-    rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
     robotStarted = 0;
-    rt_mutex_release(&mutex_robotStarted);
-    rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
     cameraStarted = 0;
-    rt_mutex_release(&mutex_cameraStarted);
-    rt_mutex_acquire(&mutex_move, TM_INFINITE);
     move = MESSAGE_ROBOT_STOP;
-    rt_mutex_release(&mutex_move);
-    rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
     findArenaStarted = false;
-    rt_mutex_release(&mutex_findArena);
-    rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
     arenaIsConfirmed = false;
     // rt_sem_v(&sem_arenaConfirmed); TODO réfléchire si ça ben c utile
-    rt_mutex_release(&mutex_arenaSaved);
-    rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
     findPositionStarted = false;
-    rt_mutex_release(&mutex_findPosition);
-    rt_mutex_acquire(&mutex_battery, TM_INFINITE);
     batteryEnabled = false;
-    rt_mutex_release(&mutex_battery);
 }
 
 /**
