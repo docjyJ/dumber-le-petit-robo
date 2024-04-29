@@ -254,15 +254,15 @@ void Tasks::Run() {
 void Tasks::Stop() {
     rt_mutex_acquire(&mutex_robot, TM_INFINITE);
     robot.Close();
-    move = MESSAGE_ROBOT_STOP;
-    robotStarted = 0;
+//    move = MESSAGE_ROBOT_STOP;
+//    robotStarted = 0;
     rt_mutex_release(&mutex_robot);
     rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
     monitor.Close();
     rt_mutex_release(&mutex_monitor);
     rt_mutex_acquire(&mutex_camera, TM_INFINITE);
     camera->Close();
-    cameraStarted = 0;
+//    cameraStarted = 0;
     rt_mutex_release(&mutex_camera);
 }
 
