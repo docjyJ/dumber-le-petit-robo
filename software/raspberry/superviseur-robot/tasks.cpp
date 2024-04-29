@@ -252,30 +252,40 @@ void Tasks::Run() {
  * @brief Arrêt des tâches
  */
 void Tasks::Stop() {
-    cout << "Stop tasks" << endl << flush;
+    cout << "========================= Stop tasks =========================" << endl << flush;
     rt_mutex_acquire(&mutex_move, TM_INFINITE);
     move = MESSAGE_ROBOT_STOP;
     rt_mutex_release(&mutex_move);
-    cout << "stop mouvement" << endl << flush;
     rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
     robotStarted = 0;
     rt_mutex_release(&mutex_robotStarted);
-    cout << "robot stoped" << endl << flush;
     rt_mutex_acquire(&mutex_robot, TM_INFINITE);
     robot.Write(new Message((MessageID) MESSAGE_ROBOT_POWEROFF));
     robot.Close();
     rt_mutex_release(&mutex_robot);
-    cout << "Com robo close" << endl << flush;
     rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
     monitor.Close();
     rt_mutex_release(&mutex_monitor);
-    cout << "ya pu de motitor" << endl << flush;
-//    rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
-//    cameraStarted = 0;
-//    rt_mutex_release(&mutex_cameraStarted);
-//    rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-//    camera->Close();
-//    rt_mutex_release(&mutex_camera);
+    rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+    cameraStarted = 0;
+    rt_mutex_release(&mutex_cameraStarted);
+    rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+    camera->Close();
+    rt_mutex_release(&mutex_camera);
+    rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
+    arenaSaved = Arena();
+    rt_mutex_release(&mutex_arenaSaved);
+    rt_mutex_acquire(&mutex_findArena, TM_INFINITE);
+    findArenaStarted = false;
+    rt_mutex_release(&mutex_findArena);
+    rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
+    findPositionStarted = false;
+    rt_mutex_release(&mutex_findPosition);
+    rt_mutex_acquire(&mutex_battery, TM_INFINITE);
+    batteryEnabled = false;
+    rt_mutex_release(&mutex_battery);
+
+    cout << "========================= Tasks stopped =========================" << endl << flush;
 }
 
 /**
