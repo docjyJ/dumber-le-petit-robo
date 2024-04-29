@@ -253,18 +253,19 @@ void Tasks::Run() {
  */
 void Tasks::Stop() {
     cout << "Stop tasks" << endl << flush;
+    rt_mutex_acquire(&mutex_move, TM_INFINITE);
+    move = MESSAGE_ROBOT_STOP;
+    rt_mutex_release(&mutex_move);
+    cout << "stop mouvement" << endl << flush;
     rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
     robotStarted = 0;
     rt_mutex_release(&mutex_robotStarted);
     cout << "robot stoped" << endl << flush;
     rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+    robot.Write(new Message((MessageID) MESSAGE_ROBOT_POWEROFF));
     robot.Close();
     rt_mutex_release(&mutex_robot);
     cout << "Com robo close" << endl << flush;
-    rt_mutex_acquire(&mutex_move, TM_INFINITE);
-    move = MESSAGE_ROBOT_STOP;
-    rt_mutex_release(&mutex_move);
-    cout << "stop mouvement" << endl << flush;
     rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
     monitor.Close();
     rt_mutex_release(&mutex_monitor);
