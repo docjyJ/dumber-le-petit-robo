@@ -278,7 +278,7 @@ void Tasks::Stop() {
     rt_mutex_release(&mutex_findArena);
     rt_mutex_acquire(&mutex_arenaSaved, TM_INFINITE);
     arenaIsConfirmed = false;
-    rt_sem_v(&sem_arenaConfirmed);
+    // rt_sem_v(&sem_arenaConfirmed); TODO réfléchire si ça ben c utile
     rt_mutex_release(&mutex_arenaSaved);
     rt_mutex_acquire(&mutex_findPosition, TM_INFINITE);
     findPositionStarted = false;
