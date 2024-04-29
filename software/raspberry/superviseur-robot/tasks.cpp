@@ -403,7 +403,7 @@ void Tasks::ReceiveFromMonTask(void *arg) {
                 rt_sem_v(&sem_closeComCamera);
             } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITHOUT_WD)) {
                 rt_sem_v(&sem_startRobot);
-            } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITHOUT_WD)) {
+            } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITH_WD)) {
                 rt_sem_v(&sem_startRobotWD);
             } else if (msgRcv->CompareID(MESSAGE_ROBOT_GO_FORWARD) ||
                     msgRcv->CompareID(MESSAGE_ROBOT_GO_BACKWARD) ||
