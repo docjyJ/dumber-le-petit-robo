@@ -610,7 +610,10 @@ void Tasks::StartRobotWDTask(void *arg) {
 
         if (msgSend->GetID() == MESSAGE_ANSWER_ACK) {
             WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_ACK));
-            SendToRobot(new Message(MESSAGE_ROBOT_RELOAD_WD));
+            SendToRobot();
+            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+            robot.Write(new Message(MESSAGE_ROBOT_RELOAD_WD));
+            rt_mutex_release(&mutex_robot);
             rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
             robotStarted = 1;
             rt_mutex_release(&mutex_robotStarted);
