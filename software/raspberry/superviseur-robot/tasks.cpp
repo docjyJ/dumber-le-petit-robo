@@ -764,8 +764,10 @@ void Tasks::SendToRobot(Message * msg) {
     if(id == MESSAGE_ANSWER_ROBOT_TIMEOUT ||
             id == MESSAGE_ANSWER_ROBOT_ERROR ||
             id == MESSAGE_ANSWER_ROBOT_UNKNOWN_COMMAND) {
+        cout << "Robot error: " << ret->ToString() << endl << flush;
         messageRobotCount++;
         if(messageRobotCount > 2) {
+            cout << "KABOUUUUUUM" << endl << flush;
             rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
             robotStarted = 0;
             rt_mutex_release(&mutex_robotStarted);
