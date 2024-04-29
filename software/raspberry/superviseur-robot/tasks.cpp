@@ -609,16 +609,16 @@ void Tasks::StartRobotWDTask(void *arg) {
         WriteInQueue(&q_messageToMon, msgSend);  // msgSend will be deleted by sendToMon
 
         if (msgSend->GetID() == MESSAGE_ANSWER_ACK) {
+            WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_ACK));
+            SendToRobot(new Message(MESSAGE_ROBOT_RELOAD_WD));
             rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
             robotStarted = 1;
             rt_mutex_release(&mutex_robotStarted);
-            WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_ACK));
-            SendToRobot(new Message(MESSAGE_ROBOT_RELOAD_WD));
         } else {
+            WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_NACK));
             rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
             robotStarted = 0;
             rt_mutex_release(&mutex_robotStarted);
-            WriteInQueue(&q_messageToMon, new Message(MESSAGE_ANSWER_NACK));
         }
     }
 }
