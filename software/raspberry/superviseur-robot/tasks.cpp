@@ -252,6 +252,9 @@ void Tasks::Run() {
  * @brief Arrêt des tâches
  */
 void Tasks::Stop() {
+    rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+    robotStarted = 0;
+    rt_mutex_release(&mutex_robotStarted);
     rt_mutex_acquire(&mutex_robot, TM_INFINITE);
     robot.Close();
     move = MESSAGE_ROBOT_STOP;
@@ -259,15 +262,12 @@ void Tasks::Stop() {
     rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
     monitor.Close();
     rt_mutex_release(&mutex_monitor);
-    rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-    camera->Close();
-    rt_mutex_release(&mutex_camera);
     rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
     cameraStarted = 0;
     rt_mutex_release(&mutex_cameraStarted);
-    rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
-    robotStarted = 0;
-    rt_mutex_release(&mutex_robotStarted);
+    rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+    camera->Close();
+    rt_mutex_release(&mutex_camera);
 }
 
 /**
