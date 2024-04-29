@@ -85,6 +85,7 @@ private:
     RT_TASK th_openComCamera;
     RT_TASK th_closeComCamera;
     RT_TASK th_startRobot;
+    RT_TASK th_startRobotWD;
     RT_TASK th_move;
     RT_TASK th_sendImage;
     RT_TASK th_findArena;
@@ -113,6 +114,7 @@ private:
     RT_SEM sem_closeComCamera;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
+    RT_SEM sem_startRobotWD;
     RT_SEM sem_arenaConfirmed;
 
     /**********************************************************************/
@@ -158,6 +160,7 @@ private:
      * @brief Thread starting the communication with the robot.
      */
     void StartRobotTask(void *arg);
+    void StartRobotWDTask(void *arg);
 
     /**
      * @brief Thread handling control of the robot.
