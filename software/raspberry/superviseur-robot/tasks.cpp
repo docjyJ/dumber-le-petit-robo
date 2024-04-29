@@ -832,6 +832,9 @@ void Tasks::SendToRobot(Message * msg) {
             messageRobotCount = 0;
         }
     } else {
+        rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+        robot.Write(new Message(MESSAGE_ROBOT_RELOAD_WD));
+        rt_mutex_release(&mutex_robot);
         messageRobotCount = 0;
     }
 }
