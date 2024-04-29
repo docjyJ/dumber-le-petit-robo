@@ -351,14 +351,14 @@ void Tasks::ReceiveFromMonTask(void *arg) {
         if (msgRcv->CompareID(MESSAGE_MONITOR_LOST)) {
             Stop();
             cout << "Lost connection with monitor" << endl << flush;
-            int status;
-            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-            status = monitor.Open(SERVER_PORT);
-            rt_mutex_release(&mutex_monitor);
-            if (status < 0)
-                throw std::runtime_error{
-                        "Unable to start server on port " + std::to_string(SERVER_PORT)
-                };
+//            int status;
+//            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+//            status = monitor.Open(SERVER_PORT);
+//            rt_mutex_release(&mutex_monitor);
+//            if (status < 0)
+//                throw std::runtime_error{
+//                        "Unable to start server on port " + std::to_string(SERVER_PORT)
+//                };
             monitor.AcceptClient();
 
         } else {
