@@ -263,9 +263,6 @@ void Tasks::Stop() {
     robot.Write(new Message((MessageID) MESSAGE_ROBOT_POWEROFF));
     robot.Close();
     rt_mutex_release(&mutex_robot);
-    rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-    monitor.Close();
-    rt_mutex_release(&mutex_monitor);
     rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
     cameraStarted = 0;
     rt_mutex_release(&mutex_cameraStarted);
@@ -284,6 +281,9 @@ void Tasks::Stop() {
     rt_mutex_acquire(&mutex_battery, TM_INFINITE);
     batteryEnabled = false;
     rt_mutex_release(&mutex_battery);
+    rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+    monitor.Close();
+    rt_mutex_release(&mutex_monitor);
 
     cout << "========================= Tasks stopped =========================" << endl << flush;
 }
